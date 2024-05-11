@@ -1,0 +1,1 @@
+enum TaskStatus {Upcoming, InProgress, Completed, Cancelled }

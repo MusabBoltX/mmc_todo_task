@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "105416207694",
+    "project_id": "todoapptask-cea97",
+    "storage_bucket": "todoapptask-cea97.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105416207694:android:7028f65abce7815cb4821f",
+        "android_client_info": {
+          "package_name": "com.flutter.mmc_task"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4lq5B8PP6si4SuvqIJ-35kmQw2-39jMY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
