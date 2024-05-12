@@ -46,6 +46,7 @@ class AddTask extends StatelessWidget {
                       CustomTextField(
                         label: "Description",
                         maxLines: 2,
+                        textCapitalization: TextCapitalization.sentences,
                         controller: task.description,
                       ),
                       40.ph,

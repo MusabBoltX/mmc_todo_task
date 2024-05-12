@@ -2,16 +2,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mmc_task/firebase_options.dart';
 import 'package:mmc_task/src/app/data/sources/local.dart';
 import 'package:mmc_task/src/app/presentation/screens/dashboard.dart';
 import 'package:mmc_task/src/core/routes/app_routers.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 Future<void> main() async {
   await ScreenUtil.ensureScreenSize();
-  databaseFactory = databaseFactoryFfi;
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
   runApp(
     const ProviderScope(
       child: MyApp(),

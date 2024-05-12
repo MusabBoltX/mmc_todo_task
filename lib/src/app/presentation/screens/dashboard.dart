@@ -20,9 +20,7 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(context, ref) {
-    final todosStream = ref.watch(todosStreamProvider.stream);
     final task = ref.watch(tasksProvider);
-
     return Scaffold(
       backgroundColor: AppColors.base,
       appBar: AppBar(
@@ -50,36 +48,36 @@ class HomePage extends ConsumerWidget {
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: StreamBuilder<List<Todo>>(
-                stream: todosStream,
-                builder: (context, snapshot) {
-                  appPrint("DATA: ${snapshot.data?.asMap()}");
-                  return RefreshIndicator(
-                    onRefresh: () {
-                      return task.sycWithFirebase();
-                    },
-                    child: ListView(
+            child: RefreshIndicator(
+              onRefresh: () {
+                return task.sycWithFirebase();
+              },
+              child: task.todos.isEmpty
+                  ? const CustomText(
+                      "No Todos Found",
+                      alignment: Alignment.center,
+                    )
+                  : ListView(
                       children: [
                         Divider(color: AppColors.borderGrey),
                         ListView.separated(
-                          itemCount: snapshot.data?.length ?? 0,
+                          itemCount: task.todos.length ?? 0,
                           shrinkWrap: true,
                           reverse: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemBuilder: (_, i) {
-                            appPrint("Event: ${snapshot.data?[i].toJson()}");
+                            appPrint("Event: ${task.todos[i].toJson()}");
                             return TodoTile(
-                              title: snapshot.data?[i].title ?? "My task",
-                              status: snapshot.data?[i].status ?? "Upcoming",
+                              title: task.todos[i].title ?? "My task",
+                              status: task.todos[i].status ?? "Upcoming",
                               onEdit: () {
                                 AppRouter.push(UpdateTask(
                                   todo: Todo(
-                                    id: snapshot.data?[i].id ?? "",
-                                    title: snapshot.data?[i].title ?? "",
+                                    id: task.todos[i].id ?? "",
+                                    title: task.todos[i].title ?? "",
                                     description:
-                                        snapshot.data?[i].description ?? "",
-                                    status:
-                                        snapshot.data?[i].status ?? "Upcoming",
+                                        task.todos[i].description ?? "",
+                                    status: task.todos[i].status ?? "Upcoming",
                                   ),
                                 ));
                               },
@@ -89,7 +87,7 @@ class HomePage extends ConsumerWidget {
                                   title:
                                       "Are you sure you want to delete this task?",
                                   onDelete: () async =>
-                                      await task.delete(snapshot.data?[i].id),
+                                      await task.delete(task.todos[i].id),
                                 );
                               },
                             );
@@ -101,8 +99,7 @@ class HomePage extends ConsumerWidget {
                         kBottomNavigationBarHeight.ph,
                       ],
                     ),
-                  );
-                }),
+            ),
           ),
         ),
       ),
@@ -111,6 +108,7 @@ class HomePage extends ConsumerWidget {
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: AppColors.primaryWhite,
         onPressed: () {
+          // task.deleteBatch();
           AppRouter.push(const AddTask());
         },
         label: const Text("New Task"),

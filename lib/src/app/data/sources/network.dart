@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:mmc_task/src/app/data/models/todo_model.dart';
 import 'package:mmc_task/src/app/data/sources/local.dart';
+import 'package:mmc_task/src/components/prompts.dart';
+import 'package:mmc_task/src/core/routes/app_routers.dart';
 import 'package:mmc_task/src/core/utils/app_logger.dart';
 
 class NetworkSource {
@@ -11,30 +13,51 @@ class NetworkSource {
   final OfflineSource _offlineSource = OfflineSource();
 
   // Create
-  Future<void> createTodo(Todo task) async {
+  Future<void> createTodo(Todo task, {required bool connected}) async {
+    appPrint("connected: $connected");
+    if (connected) {
+      try {
+        final ref = _database.push();
+        await ref.set({
+          "id": ref.key,
+          "title": task.title,
+          "description": task.description,
+          "status": task.status,
+        });
+      } on FirebaseException catch (e) {
+        appPrint('Error creating todo: $e');
+        // AppRouter.back();
+      }
+    } else {
+      await _offlineSource.insertTodo(task);
+      // AppRouter.back();
+    }
+  }
+
+  Future<void> syncWithFirebase(List<Todo> todos) async {
     try {
-      final ref = _database.push();
-      await ref.set({
-        "id": ref.key,
-        "title": task.title,
-        "description": task.description,
-        "status": task.status,
-      });
-      // await _offlineSource.insertTodo(task);
-      print('Todo created with ID: ${ref.key}');
-    } on FirebaseException catch (e) {
-      print('Error creating todo: $e');
-    } on SocketException {
-      await _offlineSource.insertTodo(task, offline: true);
+      final todoRef = _database;
+
+      for (final todo in todos) {
+        final newTodoRef = todoRef.push();
+        await newTodoRef.set(todo.toJson());
+      }
+      print('Todos inserted successfully!');
+      await _offlineSource.deleteAllTodos();
+      Prompts.showSnackBar("Database synced successfully!");
+    } catch (e) {
+      print('Todos Insertion Failed!');
+      print(e);
     }
   }
 
   // Read
-  Stream<List<Todo>> getTodos() {
-    Stream<List<Todo>> todo;
+  Future<List<Todo>> getTodos() async {
+    appPrint("Fetching Todos...");
+    List<Todo> todo;
     try {
-      todo = _database.onValue.map((event) {
-        final data = event.snapshot.value as Map<dynamic, dynamic>;
+      todo = await _database.get().then((event) {
+        final data = event.value as Map<dynamic, dynamic>;
         if (data == null) return [];
         final todos = data.entries.map((entry) => Todo(
           id: entry.key as String,
@@ -42,15 +65,13 @@ class NetworkSource {
           description: entry.value['description'] as String,
           status: entry.value['status'] as String,
         )).toList();
-        appPrint("todos.first.title: ${todos.first.title}");
         return todos;
       });
       return todo;
-    } on SocketException {
-      todo = _offlineSource.getTodos().asStream();
+    } on FirebaseException catch (e) {
+      appPrint("Exception $e");
+      todo = await _offlineSource.getTodos();
       appPrint("Offline: ${todo.toList()}");
-    } catch (e) {
-      todo = _offlineSource.getTodos().asStream();
     }
     return todo;
   }
@@ -71,12 +92,30 @@ class NetworkSource {
   }
 
   // Delete
-  Future<void> deleteTodo(String id) async {
+  Future<void> deleteTodo(id) async {
     try {
       await _database.child(id).remove();
       print('Todo deleted with ID: $id');
     } on FirebaseException catch (e) {
       print('Error deleting todo: $e');
+    } catch (e) {
+      appPrint("Error deleting... $e");
+      await _offlineSource.deleteTodo(id);
     }
+  }
+
+  Future<void> deleteTodos(List<Todo> todos) async {
+    final todoRef = _database;
+
+    for (final todo in todos) {
+      final todoKey = todo.id;
+      if (todoKey != null) {
+        await todoRef.child(todoKey).remove();
+      } else {
+        print('Error: Todo missing ID for deletion.');
+      }
+    }
+
+    print('Todos deleted successfully!');
   }
 }

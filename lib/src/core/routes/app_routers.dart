@@ -6,7 +6,9 @@ class AppRouter {
   static get context => navKey.currentContext;
 
   static void back() {
-    Navigator.pop(context);
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
   }
 
   static push(page) async {

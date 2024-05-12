@@ -9,7 +9,7 @@ Todo todoFromJson(String str) => Todo.fromJson(json.decode(str));
 String todoToJson(Todo data) => json.encode(data.toJson());
 
 class Todo {
-  String? id;
+  dynamic id;
   String? title;
   String? description;
   String? status;
